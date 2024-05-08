@@ -1,0 +1,151 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/css.css to edit this template
+*/
+/* 
+    Created on : 15 feb 2023, 11:14:16
+    Author     : WinBlu
+*/
+
+
+.ms-parent.multiselect {    
+    border: 1px solid #999;
+    border-radius: 5px;
+}
+
+.ms-choice > span.placeholder{
+    color:transparent;
+}
+
+button.ms-choice {
+    width: 100%;
+    border-color: transparent;
+}
+
+button.ms-choice:hover{
+    background-color:transparent;
+}
+
+button.ms-choice:hover > span{
+    color:#363636;
+}
+
+.ms-parent.multiselect{
+    width:100% !important;
+}
+
+.container-gruppo-voce{
+    /*border: 1px solid #000;
+    padding:25px;
+    margin:15px;*/    
+    margin-bottom:25px;
+}
+
+.container-voce > div{
+    float:left;
+}
+
+.container-voce .sinistra{
+    width:5%;
+}
+
+.container-voce .centro{
+    width:75%;
+    padding-left:15px;
+    padding-right:15px;
+}
+
+.container-voce .centro .esito{
+    width:25%;
+}
+
+.container-voce .destra{
+    width:25%;
+    padding-left:15px;
+    padding-right:15px;
+}
+
+.container-voce{
+    margin-bottom: 25px;
+    border:1px solid #ddd;
+    padding:15px;
+}
+
+.container-voce .destra .date .col-sm-3, .container-voce .destra .date .col-sm-9{
+    width:100%;
+    text-align:left;    
+}
+
+.container-voce .destra .date{
+    padding-left:15px;
+    padding-right: 15px;
+}
+
+.container-voce .descrizione{
+    margin-bottom:15px;
+}
+
+#dettagligruppovoce .container-voci{
+    display:none;
+}
+
+.voce {
+    border: 1px solid rgb(221, 221, 221);
+    margin-bottom: 15px;
+    padding: 15px;
+}
+
+#salvagruppovoce .mostranascondi-container-voci{
+    display: none;
+}
+
+.mostranascondi-container-voci{
+    text-align: right;
+    margin-bottom:25px;
+    cursor: pointer;
+    line-height: 40px;
+}
+
+.mostranascondi-container-voci > span, .mostranascondi-voci > span{
+    display: block;
+    float:left;
+}
+
+.mostranascondi-container-voci span.icona, .mostranascondi-voci span.icona{
+    width:40px;
+    height: 40px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-image: url('../images/ico-down.png');
+    display:block;
+    cursor: pointer;
+}
+
+.margin-50{
+    margin-top:50px;
+}
+
+.destra img{
+    
+}
+
+.table-responsive-sm{
+	padding:50px;
+}
+
+.categoria-container{
+    width:100%; 
+    text-align:center;
+} 
+
+.categoria-container a.etichetta-singola{
+    display: inline-block;
+    width:25%;
+    margin:10px;
+    padding:15px;
+}
+
+.categoria-container a.etichetta-singola img{
+    width:100%;
+}

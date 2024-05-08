@@ -1,0 +1,62 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/ClientSide/css.css to edit this template
+*/
+/* 
+    Created on : 10 feb 2023, 12:00:58
+    Author     : WinBlu
+*/
+
+table.dataTable thead .sorting:after,
+table.dataTable thead .sorting:before,
+table.dataTable thead .sorting_asc:after,
+table.dataTable thead .sorting_asc:before,
+table.dataTable thead .sorting_asc_disabled:after,
+table.dataTable thead .sorting_asc_disabled:before,
+table.dataTable thead .sorting_desc:after,
+table.dataTable thead .sorting_desc:before,
+table.dataTable thead .sorting_desc_disabled:after,
+table.dataTable thead .sorting_desc_disabled:before {
+  bottom: .5em;
+}
+
+.ms-parent.multiselect{
+    width:100% !important;
+}
+
+.ms-drop input[type="checkbox"]{
+    margin-right: 10px;
+}
+
+a.btn{
+    text-decoration: none !important;
+}
+
+.login_oueter {
+    width: 360px;
+    max-width: 100%;
+}
+.logo_outer{
+    text-align: center;
+}
+.logo_outer img{
+    width:120px;
+    margin-bottom: 40px;
+}
+
+body .input-group-text.show-hide{
+    display: block;
+    position: absolute;
+    right: 0;
+    margin-top: -45px;
+    margin-right: 5px;
+}
+
+body legend{
+    float:none;
+}
+
+body div.alert{
+    margin:25px;
+    max-width:500px;
+}
