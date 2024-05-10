@@ -35,4 +35,30 @@ class TraduzioneController implements ssf\InterfaceController{
     public function getTraduzioni(): array|null{
         return $this->traDAO->getResults();
     }
+    
+    public function salvaTraduzioni(array $lingue): bool{
+        //il salvataggio delle traduzioni comporta la cancellazione di tutte quelle attive e
+        //il successivo salvataggio di ogni traduzione nuova
+        
+        //trovo tutte le traduzioni per ottenere l'id
+        $traduzioni = $this->getTraduzioni();
+        //elimino le traduzioni
+        if(ssf\checkResult($traduzioni)){
+            foreach($traduzioni as $item){
+                $trad = updateToTraduzione($item);
+                $this->delete($trad->getID());
+            }
+        }
+        
+        //salvo le nuove traduzioni
+        foreach($lingue as $item){
+            $t = new Traduzione();
+            $t->setLingua($item);
+            if(!$this->save($t)){
+                return false;
+            }
+        }
+        
+        return true;
+    }
 }

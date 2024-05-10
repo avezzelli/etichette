@@ -149,3 +149,40 @@ button.ms-choice:hover > span{
 .categoria-container a.etichetta-singola img{
     width:100%;
 }
+
+.single-check{
+    display: inline-block;    
+    margin:5px;
+}
+
+.single-check .form-check-input{
+    float:none;
+    margin-left:0px;
+    margin-right: 25px;
+}
+
+.single-check .form-check-label{
+    margin-top:-5px;
+}
+
+.single-check .form-check-input::after{
+    display:block;
+    width:18px;
+    margin-left:25px;
+}
+
+.single-check .form-check-input.en::after{
+    content:url(../images/lang/gb.svg);    
+}
+
+.single-check .form-check-input.fr::after{
+    content:url(../images/lang/fr.svg);    
+}
+
+.single-check .form-check-input.de:after{
+    content:url(../images/lang/de.svg);    
+}
+
+.single-check .form-check-input.es:after{
+    content:url(../images/lang/es.svg);    
+}

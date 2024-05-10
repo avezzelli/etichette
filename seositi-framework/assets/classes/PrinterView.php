@@ -221,11 +221,21 @@ class PrinterView {
         $result = null;
         if($value == null){
             if(isset($_POST[$name])){
-                $result = stripslashes($_POST[$name]);
+                if(!is_array($_POST[$name])){
+                    $result = stripslashes($_POST[$name]);
+                }
+                else{
+                    $result = $_POST[$name];
+                }
             }  
         }
         else{
-            $result = stripslashes($value);
+            if(!is_array($value)){
+                $result = stripslashes($value);
+            }
+            else{
+                    $result = $value;
+                }
         }
         return $result;
     }
@@ -467,11 +477,22 @@ class PrinterView {
         $html .= '<div class="form-check">';
         foreach($array as $k => $v){
             $checked = '';
-            if($value == $k){
-                $checked = 'checked ';
-            }            
-            $html .= '<input class="form-check-input '.$k.'" type="checkbox" name="'.$name.'" value="'.$k.'" '.$checked.' >';
-            $html .= '<label class="form-check-label '.$k.'">'.$v.'</label>';
+           
+            if(is_array($value)){
+                if(in_array($k, $value)){
+                    $checked = 'checked ';
+                }
+            }
+            else{
+                if($value == $k){
+                    $checked = 'checked ';
+                }   
+            }
+            
+            $html .= '<div class="single-check '.$k.'">';
+            $html .= '  <input class="form-check-input '.$k.'" type="checkbox" name="'.$name.'[]" value="'.$k.'" '.$checked.' >';
+            $html .= '  <label class="form-check-label '.$k.'">'.$v.'</label>';
+            $html .= '</div>';
         }        
         $html .= '</div>';
         return $html;
@@ -498,7 +519,7 @@ class PrinterView {
             case Campo::TELEFONO():
             case Campo::AREA_DI_TESTO():
             case Campo::PREZZO():
-            case Campo::CHECKBOX():
+            //case Campo::CHECKBOX():
                 if($required){
                     $result = $this->checkRequiredSingleField($name, $label);
                 }
@@ -527,6 +548,7 @@ class PrinterView {
                 }
                 break;                
             case 'multiple-select':
+            case Campo::CHECKBOX():
                 //restituisce un array
                 $result = $this->checkMultipleSelectField($name);                 
                 break;
@@ -582,12 +604,12 @@ class PrinterView {
     }
     
     /**
-     * La funzione controlla un multiple select field e restituisce i campi in un array
+     * La funzione controlla un multiple select field o una checkbox e restituisce i campi in un array
      * @param type $nameField
      * @return array
      */
     protected function checkMultipleSelectField($nameField){  
-        print_r($_POST[$nameField]);
+        //print_r($_POST[$nameField]);
         if(isset($_POST[$nameField]) && count($_POST[$nameField]) > 0){
             $result = array();
             foreach($_POST[$nameField] as $item){
