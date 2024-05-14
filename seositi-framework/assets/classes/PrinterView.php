@@ -369,6 +369,17 @@ class PrinterView {
             $html .= '<input class="input form-control form-control-lg" id="'.$name.'" name="'.$name.'" value="'.$value.'" type="file" '.$required.' '.$disabled.'>';
             $html .= '<p>'.$value.'</p>';
         }
+        else if($campo == Campo::IMMAGINE()){
+            $immagine = '';
+            if($value != null){
+                $immagine = '<img src="'.$value.'" style="max-width:150px;">';       
+                $html .= '<input class="input-hidden" type="hidden" name="'.$name.'-old" value="'.$value.'" />';
+            }
+            $html.= '<div class="container-immagine">'
+                    . '<div style="display:inline-block; width:65%"><input class="input form-control form-control-lg" id="'.$name.'" value="'.$value.'" name="'.$name.'" type="file" '.$required.' '.$disabled.'></div>'
+                    . '<div style="display:inline-block; width:30%; margin-left:5%; text-align:center; border:1px solid #999; padding:15px;">'.$immagine.'</div>'
+                    . '</div>';
+        }
         else if($campo == Campo::EDITOR()){
             ob_start();
             wp_editor($value, $name);

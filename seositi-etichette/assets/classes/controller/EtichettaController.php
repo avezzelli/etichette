@@ -98,8 +98,7 @@ class EtichettaController implements ssf\InterfaceController {
     
     public function deleteVociByTemplate(int $idTem): bool{
         //nel caso ci siano delle voci tradotte elimino anche loro        
-        $where = array(DBT_ID_TEM => $idTem);
-        $this->vtrDAO->delete($where);        
+        $where = array(DBT_ID_TEM => $idTem);          
         return $this->vocDAO->delete($where);
     }
     
@@ -128,36 +127,7 @@ class EtichettaController implements ssf\InterfaceController {
             }
         }        
         return $result;
-    }
-    
-    /*** VOCE TRADOTTA **/
-    public function deleteVoceTradotta(int $ID): bool{
-        return $this->vtrDAO->deleteByID($ID);
-    }
-    
-    public function saveVoceTradotta(Voce $obj, int $idTem, string $lang): bool|int{       
-        $obj->setIdTemplate(0);
-       
-        $idVoce = $this->vocDAO->save($obj);
-        //$idVoce = $this->saveVoce($obj, 0); //imposto a zero per riuscire a diversificarlo dalla tabella db di voce        
-       
-        if($idVoce > 0){
-            $vtr = new VoceTradotta();
-            $vtr->setLang($lang);
-            $vtr->setIdVoce($idVoce);
-            $vtr->setIdTem($idTem);
-            return $this->vtrDAO->save($vtr);
-        }
-        return false;                
-    }
-    
-    public function updateVoceTradotta(Voce $obj): bool|int{
-        return $this->updateVoce($obj);
-    }
-    
-    public function getVoceTradottaByID(int $idVoceTradotta): null|Voce{
-        return $this->vtrDAO->getResultByID($idVoceTradotta);
-    }
+    }   
     
         
     /*** TEMPLATE ***/
@@ -165,6 +135,8 @@ class EtichettaController implements ssf\InterfaceController {
     public function deleteTemplate(int $ID): bool{
         //cancellare il template elimina anche tutte le voci inserite
         $this->deleteVociByTemplate($ID);
+        //cancello anche le voci tradotte
+        $this->traController->deleteVociTradotteByTemplate($ID);
         return $this->temDAO->deleteByID($ID);
     }
     
@@ -197,6 +169,7 @@ class EtichettaController implements ssf\InterfaceController {
             //L'aggiornamento avviene in 2 fasi:
             //1. Aggiorno il template
             $update = $this->temDAO->update($obj);
+            
             //2. salvo le voci (elimino quelle attuali e salvo le nuove)
             //Per via delle traduzioni non posso più permettermi di eliminare e salvare. 
             //Devo aggiornare voce per voce.
@@ -204,6 +177,14 @@ class EtichettaController implements ssf\InterfaceController {
                 $voce = updateToVoce($item);
                 $this->updateVoce($voce);
             }
+            //Aggiorno le voci tradotte
+            if(ssf\checkResult($obj->getVociTradotte())){                
+                foreach($obj->getVociTradotte() as $item){
+                    $vt = updateToVoceTradotta($item);
+                    $this->traController->updateVoceTradotta($vt);
+                }
+            }
+               
             return $update;
         }
         return true;

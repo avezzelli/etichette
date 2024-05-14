@@ -172,7 +172,7 @@ button.ms-choice:hover > span{
 }
 
 .single-check .form-check-input.en::after{
-    content:url(../images/lang/gb.svg);    
+    content:url(../images/lang/en.svg);    
 }
 
 .single-check .form-check-input.fr::after{
@@ -189,4 +189,17 @@ button.ms-choice:hover > span{
 
 .wp-editor-container iframe{
     min-height: 410px;
+}
+
+nav.lingue-attive{
+    margin-bottom:50px;
+}
+nav.lingue-attive a{
+    display: inline-block;
+}
+
+nav.lingue-attive a img{
+    width:20px;
+    height:auto;
+    margin:5px;
 }

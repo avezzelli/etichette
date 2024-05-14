@@ -408,7 +408,7 @@ class EtichettaView extends ssf\PrinterView implements ssf\InterfaceView{
         if($voce != null){
             $campo = ssf\Campo::EDITOR();            
             if($voce->getTipo() == ssf\Campo::IMMAGINE()){
-                $campo = ssf\Campo::FILE();
+                $campo = ssf\Campo::IMMAGINE();
             }   
             $divContent = '';
             $divContent .= parent::printDiv(parent::printInput(ssf\Modello::FLOAT(), ssf\Campo::NASCOSTO(), 'count-voce-'.$counter, '', '', $counter), 'countvoce');
@@ -416,6 +416,8 @@ class EtichettaView extends ssf\PrinterView implements ssf\InterfaceView{
             $divContent .= parent::printDiv(parent::printInput(ssf\Modello::DUE_COLONNE(), $campo, FRM_VOC_VAL.'-'.$counter, $voce->getLabel(), ssf\Richiesto::NO(), $voce->getValore()), 'valore');
             $divContainer = parent::printDiv($divContent, 'voce', 'num', $counter);
             $html .= $divContainer;
+            
+            //parent::printInput(ssf\Modello::FLOAT(), ssf\Campo::IMMAGINE(), FRM_ETI_IMMAGINE, LBL_IMMAGINE, ssf\Richiesto::NO(), $eti->getImmagine());
         }        
         return $html;
     }
@@ -425,7 +427,7 @@ class EtichettaView extends ssf\PrinterView implements ssf\InterfaceView{
         if($vt != null){
             $campo = ssf\Campo::EDITOR();  
             if($vt->getTipo() == ssf\Campo::IMMAGINE()){
-                $campo = ssf\Campo::FILE();
+                $campo = ssf\Campo::IMMAGINE();
             }
             $divContent = '';
             $divContent .= parent::printDiv(parent::printInput(ssf\Modello::FLOAT(), ssf\Campo::NASCOSTO(), 'count-vt-'.$counter, '', '', $counter), 'countvoce');
@@ -500,7 +502,7 @@ class EtichettaView extends ssf\PrinterView implements ssf\InterfaceView{
                         //valore  
                         $campo = ssf\Campo::TESTO();
                         if($voce->getTipo() == ssf\Campo::IMMAGINE()){
-                            $campo = ssf\Campo::FILE();
+                            $campo = ssf\Campo::IMMAGINE();
                         }                        
                         if(parent::check($campo, FRM_VOC_VAL.'-'.$value, LBL_VALORE) !== false){
                             $voce->setValore(parent::check($campo, FRM_VOC_VAL.'-'.$value, LBL_VALORE));
@@ -561,6 +563,7 @@ class EtichettaView extends ssf\PrinterView implements ssf\InterfaceView{
                     $t = $this->tradC->getVoceTradotta($vt->getID());
                     if($t != null){
                         $temp = updateToVoceTradotta($t);
+                        $vt->setIdVoce($temp->getIdVoce());
                         $vt->setIdTemplate($temp->getIdTemplate());
                         $vt->setLabel($temp->getLabel());
                         $vt->setVisualizza($temp->getVisualizza());
@@ -570,7 +573,7 @@ class EtichettaView extends ssf\PrinterView implements ssf\InterfaceView{
                         //valore
                         $campo = ssf\Campo::TESTO();
                         if($vt->getTipo() == ssf\Campo::IMMAGINE()){
-                            $campo = ssf\Campo::FILE();
+                            $campo = ssf\Campo::IMMAGINE();
                         }  
                         if(parent::check($campo, FRM_VTR_VAL.'-'.$value, LBL_VALORE) !== false){
                             $vt->setValore(parent::check($campo, FRM_VTR_VAL.'-'.$value, LBL_VALORE));
@@ -676,29 +679,77 @@ class EtichettaView extends ssf\PrinterView implements ssf\InterfaceView{
         return $html;
     }
     
+    /**
+     * Stampa a video la pagina di front end dell'etichetta
+     * @param Etichetta $eti
+     * @return string
+     */
     private function getEtichettaForFrontEnd(Etichetta $eti):string{
         $html = '';
+        $linguaSelezionata = '';
+        if(isset($_GET['lang'])){
+            $linguaSelezionata = $_GET['lang'];
+        }
+        
+        //Menu lingue
+        if(ssf\checkResult($this->tradC->getLingueAttive())){
+            $html .= $this->printMenuLingue($eti);
+        }
+        
         $template = $eti->getTemplate();
-        foreach($template->getVoci() as $item){
-            $voce = updateToVoce($item);
-            //verifica se label e visibile o meno
-            if($voce->getVisualizza() == VISUALIZZA){
-                $content = parent::printDiv(parent::strongText($voce->getLabel()), 'sinistra');
+        if($linguaSelezionata == ''){            
+            foreach($template->getVoci() as $item){
+                $voce = updateToVoce($item);            
+                $html .= $this->printTemplate($voce->getVisualizza(), $voce->getTipo(), $voce->getLabel(), $voce->getValore());
             }
-            else if($voce->getVisualizza() == NASCONDI){
-                $content = parent::printDiv('', 'sinistra');
+        }
+
+        //Voci tradotte
+        if(ssf\checkResult($this->tradC->getLingueAttive())){
+            foreach($template->getVociTradotte() as $item){
+                $vt = updateToVoceTradotta($item);
+                if($vt->getLang() == $linguaSelezionata){
+                    $html .= $this->printTemplate($vt->getVisualizza(), $vt->getTipo(), $vt->getLabel(), $vt->getValore());
+                }
             }
             
-            $valore = stripslashes($voce->getValore());
-            if($voce->getTipo() == ssf\Campo::IMMAGINE()){                
-                $img = parent::printImage($valore);
-                $valore = parent::printUrl($img, $valore, '', ssf\Target::NUOVA_FINESTRA());
-                
-            }
-            $content .= parent::printDiv($valore, 'destra');
-            $divContainer = parent::printDiv($content, 'voce');
-            $html .= $divContainer;
-        }        
+        }
+        
+        return $html;
+    }
+    
+    private function printTemplate(int $visualizza, string $tipo, string $label, string $valore):string{
+        $html = '';
+        //verifica se label è visibile o meno
+        if($visualizza == VISUALIZZA){
+            $content = parent::printDiv(parent::strongText($label), 'sinistra');
+        }
+        else if($visualizza == NASCONDI){
+            $content = parent::printDiv('', 'sinistra');
+        }
+        $valore = stripslashes($valore);
+        if($tipo == ssf\Campo::IMMAGINE()){                
+            $img = parent::printImage($valore);
+            $valore = parent::printUrl($img, $valore, '', ssf\Target::NUOVA_FINESTRA());
+        }
+        $content .= parent::printDiv($valore, 'destra');
+        $divContainer = parent::printDiv($content, 'voce');
+        $html .= $divContainer;        
+        return $html; 
+    }
+    
+    private function printMenuLingue(Etichetta $eti):string{
+        $html = '';
+        $lingueAttive = $this->tradC->getLingueAttive();
+        $url = $eti->getLink();
+        $urlImg = plugins_url('/seositi-etichette/images/lang/') ;
+        $html .= '<nav class="lingue-attive">';
+        $html .= '<a href="'.$url.'" ><img src="'.$urlImg.'it.svg" /></a>';
+        foreach($lingueAttive as $lingua){
+            $html .= '<a href="'.$url.'&lang='.$lingua.'"><img src="'.$urlImg.$lingua.'.svg" /></a>';
+        }
+        
+        $html .= '</nav>';
         
         return $html;
     }
@@ -758,17 +809,12 @@ class EtichettaView extends ssf\PrinterView implements ssf\InterfaceView{
             }
         }
         //Aggiornamento
-        else if(isset($_POST[FRM_ETI.FRM_UPDATE])){
-            
-            $etichetta = $this->etichettaCheckFields(); 
-            print_r($etichetta);
-            
-            die();
+        else if(isset($_POST[FRM_ETI.FRM_UPDATE])){            
+            $etichetta = $this->etichettaCheckFields();             
             if($etichetta != null){
                 $update = $this->controller->updateEtichetta($etichetta);
                 return $this->printMessageAfterUpdate($update);
-            }
-       
+            }       
         }
         //Cancellazione
         else if(isset($_POST[FRM_ETI.FRM_DELETE])){
@@ -857,11 +903,7 @@ class EtichettaView extends ssf\PrinterView implements ssf\InterfaceView{
         if(parent::check(ssf\Campo::IMMAGINE(), FRM_ETI_IMMAGINE, LBL_IMMAGINE) !== false){
             $etichetta->setImmagine(parent::check(ssf\Campo::IMMAGINE(), FRM_ETI_IMMAGINE, LBL_IMMAGINE));
         }
-        
-        //var_dump($etichetta);
-        
-        
-        
+               
         return $etichetta;
     }
     
@@ -948,9 +990,11 @@ class EtichettaView extends ssf\PrinterView implements ssf\InterfaceView{
                 foreach($voci as $item){
                     $voce = updateToVoce($item);
                     if(!$this->tradC->checkVoceTradotta($voce->getID(), $lingua)){
-                       //non ho trovato la voce la creo!
-                       $vt = $this->copyVoceinVoceTradotta($voce, $lingua);
-                       $this->tradC->saveVoceTradotta($vt);
+                        //non ho trovato la voce la creo!                        
+                        if($voce->getID() > 0){                            
+                            $vt = $this->copyVoceinVoceTradotta($voce, $lingua);
+                            $this->tradC->saveVoceTradotta($vt);
+                        }
                     }                    
                 }
             }

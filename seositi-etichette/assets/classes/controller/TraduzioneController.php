@@ -105,8 +105,9 @@ class TraduzioneController implements ssf\InterfaceController{
         $where = array(
             ssf\getQueryField(DBT_ID_VOC, $idVoce, ssf\Formato::NUMERO()),
             ssf\getQueryField(DBT_VTR_LANG, $lang, ssf\Formato::TESTO())
-        );
+        );        
         $temp = $this->vtrDAO->getResults($where);
+        
         if(ssf\checkResult($temp)){
             return true;
         }
@@ -138,4 +139,12 @@ class TraduzioneController implements ssf\InterfaceController{
         return false;
     }
     
+    public function updateVoceTradotta(VoceTradotta $vt): bool|int{
+        return $this->vtrDAO->update($vt);
+    }
+    
+    public function deleteVociTradotteByTemplate(int $idTem):bool{
+        $where = array(DBT_ID_TEM => $idTem);
+        return $this->vtrDAO->delete($where);
+    }
 }
