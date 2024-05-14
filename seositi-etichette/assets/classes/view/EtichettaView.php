@@ -7,12 +7,14 @@ class EtichettaView extends ssf\PrinterView implements ssf\InterfaceView{
     
     private EtichettaController $controller;
     private ClienteController $cliente;
+    private TraduzioneController $tradC;
     private array $tipoVoce;
     private array $visualizzaVoce;
 
     function __construct() {
         $this->controller = new EtichettaController();
         $this->cliente = new ClienteController();
+        $this->tradC = new TraduzioneController();
         $this->tipoVoce = array(
             ssf\Campo::IMMAGINE()   => 'Immagine',
             ssf\Campo::TESTO()      => 'Editor'
@@ -209,7 +211,7 @@ class EtichettaView extends ssf\PrinterView implements ssf\InterfaceView{
                 $delete = $this->controller->deleteTemplate($template->getID());
                 return $this->printMessageAfterDelete($delete);
             }
-        }
+        }        
         return null;
     }
     
@@ -326,14 +328,45 @@ class EtichettaView extends ssf\PrinterView implements ssf\InterfaceView{
     
     private function getTemplateForEtichettaForm(Template|null $template):string{
         $html = '';
-        if($template != null){
+        if($template != null){                                      
             $html .= parent::printInput(ssf\Modello::FLOAT(), ssf\Campo::NASCOSTO(), FRM_TEM.FRM_ID, '', ssf\Richiesto::NO(), $template->getID());
             //ottengo le voci
-            $html .= parent::printTitolo('h4', 'Voci', 'margin-50');
             
-            /*** QUI CI VA IL METODO PER OTTENERE LE TRADUZIONI SE SONO STATE ATTIVATE ***/
+             /*** QUI CI VA IL METODO PER OTTENERE LE TRADUZIONI SE SONO STATE ATTIVATE ***/
+            //controllo se ho traduzioni disponibili, in caso affermativo aggiunto accanto a voci il codice della lingua. 
+            $lingueAttive = $this->tradC->getLingueAttive();
+            $lingue = $this->tradC->getLingue();
             
-            $html .= $this->getVociForETichettaFom($template->getVoci());     
+            if(ssf\checkResult($lingueAttive)){                                                
+                //procedo con le traduzioni 
+                $dati = array();               
+                
+                //valore di default in italiano
+                $data = array();
+                $data['prefisso'] = 'it';
+                $data['titolo'] = 'VOCI [italiano]';
+                $data['contenuto'] = $this->getVociForETichettaForm($template->getVoci());
+                array_push($dati, $data);
+                
+                $vociTradotte = $template->getVociTradotte();
+                               
+                //ciclo sulle lingue attive
+                foreach($lingueAttive as $lingua){
+                    $data = array();
+                    $data['prefisso'] = $lingua;
+                    $data['titolo'] = 'VOCI ['.$lingue[$lingua].']';
+                    
+                    //ottengo i valori del contenuto
+                    $data['contenuto'] = $this->getVociTradotteForEtichettaForm($vociTradotte, $lingua);                    
+                    array_push($dati, $data);
+                }                                
+                $html .= parent::printTabSection('traduzioni', $dati);               
+            }
+            else{
+                //procedo senza traduzioni, esiste solo l'italiano
+                $html .= parent::printTitolo('h4', 'Voci', 'margin-50');
+                $html .= $this->getVociForETichettaForm($template->getVoci());    
+            }
         }
         else{
             $html .= '<p>Questa etichetta non possiede voci da compilare.</p>';
@@ -341,7 +374,7 @@ class EtichettaView extends ssf\PrinterView implements ssf\InterfaceView{
         return $html;
     }
     
-    private function getVociForETichettaFom(array $voci): string{
+    private function getVociForETichettaForm(array $voci): string{
         $html = '';
         if(ssf\checkResult($voci)){
             $counter = 1;
@@ -351,6 +384,22 @@ class EtichettaView extends ssf\PrinterView implements ssf\InterfaceView{
                 $counter++;
             }
         }        
+        return $html;
+    }
+    
+    private function getVociTradotteForEtichettaForm(array $vociTradotte, string $lang): string{
+        $html = '';
+        if(ssf\checkResult($vociTradotte)){
+            $counter = 1;
+            foreach($vociTradotte as $item){
+                $vt = updateToVoceTradotta($item);
+                if($vt->getLang() == $lang){
+                    $html .= $this->getVoceTradottaForEtichettaForm($vt->getID(), $vt);
+                    $counter++;
+                }
+            }
+        }
+        
         return $html;
     }
     
@@ -365,6 +414,24 @@ class EtichettaView extends ssf\PrinterView implements ssf\InterfaceView{
             $divContent .= parent::printDiv(parent::printInput(ssf\Modello::FLOAT(), ssf\Campo::NASCOSTO(), 'count-voce-'.$counter, '', '', $counter), 'countvoce');
             $divContent .= parent::printDiv(parent::printInput(ssf\Modello::FLOAT(), ssf\Campo::NASCOSTO(), 'id-voce-'.$counter, '', '', $voce->getID()), 'id-voce');           
             $divContent .= parent::printDiv(parent::printInput(ssf\Modello::DUE_COLONNE(), $campo, FRM_VOC_VAL.'-'.$counter, $voce->getLabel(), ssf\Richiesto::NO(), $voce->getValore()), 'valore');
+            $divContainer = parent::printDiv($divContent, 'voce', 'num', $counter);
+            $html .= $divContainer;
+        }        
+        return $html;
+    }
+    
+    private function getVoceTradottaForEtichettaForm(int $counter, VoceTradotta $vt):string{
+        $html = '';
+        if($vt != null){
+            $campo = ssf\Campo::EDITOR();  
+            if($vt->getTipo() == ssf\Campo::IMMAGINE()){
+                $campo = ssf\Campo::FILE();
+            }
+            $divContent = '';
+            $divContent .= parent::printDiv(parent::printInput(ssf\Modello::FLOAT(), ssf\Campo::NASCOSTO(), 'count-vt-'.$counter, '', '', $counter), 'countvoce');
+            $divContent .= parent::printDiv(parent::printInput(ssf\Modello::FLOAT(), ssf\Campo::NASCOSTO(), 'id-vt-'.$counter, '', '', $vt->getID()), 'id-vt'); 
+            $divContent .= parent::printDiv(parent::printInput(ssf\Modello::FLOAT(), ssf\Campo::NASCOSTO(), 'lang-vt-'.$counter, '', '', $vt->getLang()), 'lang-vt');
+            $divContent .= parent::printDiv(parent::printInput(ssf\Modello::DUE_COLONNE(), $campo, FRM_VTR_VAL.'-'.$counter, $vt->getLabel(), ssf\Richiesto::NO(), $vt->getValore()), 'valore');
             $divContainer = parent::printDiv($divContent, 'voce', 'num', $counter);
             $html .= $divContainer;
         }        
@@ -402,6 +469,10 @@ class EtichettaView extends ssf\PrinterView implements ssf\InterfaceView{
         
         //Voci        
         $template->setVoci($this->vociCheckFields());
+        
+        //Voci Tradotte
+        $template->setVociTradotte($this->vociTradotteCheckFields());
+        
         return $template;
         
     }
@@ -475,6 +546,42 @@ class EtichettaView extends ssf\PrinterView implements ssf\InterfaceView{
         }        
         return $result;
     }
+    
+    private function vociTradotteCheckFields():array|null{
+        $result = array();
+                
+        foreach($_POST as $key=>$value){
+            if(strpos($key, 'count-vt')!== false){
+                $vt = new VoceTradotta();
+                //Questa voce sarà sempre aggiornata e mai salvata. 
+                //Il salvataggio avviene nel momento del refresh della pagina ed è gestito da checkVociTradotta
+                if(isset($_POST['id-vt-'.$value])){
+                    $vt->setID($_POST['id-vt-'.$value]);
+                    //ottengo altri campi non inclusi in questo form
+                    $t = $this->tradC->getVoceTradotta($vt->getID());
+                    if($t != null){
+                        $temp = updateToVoceTradotta($t);
+                        $vt->setIdTemplate($temp->getIdTemplate());
+                        $vt->setLabel($temp->getLabel());
+                        $vt->setVisualizza($temp->getVisualizza());
+                        $vt->setTipo($temp->getTipo());
+                        $vt->setLang($temp->getLang());
+                        
+                        //valore
+                        $campo = ssf\Campo::TESTO();
+                        if($vt->getTipo() == ssf\Campo::IMMAGINE()){
+                            $campo = ssf\Campo::FILE();
+                        }  
+                        if(parent::check($campo, FRM_VTR_VAL.'-'.$value, LBL_VALORE) !== false){
+                            $vt->setValore(parent::check($campo, FRM_VTR_VAL.'-'.$value, LBL_VALORE));
+                        }
+                    }
+                }
+                array_push($result, $vt);
+            }
+        }
+        return $result;
+    }
         
     public function printTabellaTemplate(): string{
         $result = parent::printTitoloTabella('Lista Template');
@@ -535,7 +642,12 @@ class EtichettaView extends ssf\PrinterView implements ssf\InterfaceView{
     public function printEtichettaDetailsForm(int $ID): string{
         $html = '';
         $etichetta = $this->controller->getEtichettaByID($ID);
+        
         if($etichetta != null){
+            //Azione per le traduzioni
+            $this->checkVociTradotte($etichetta);
+            //faccio un check ulteriore per includere quelle voci che possono essere state tradotte in questo momento
+            $etichetta = $this->controller->getEtichettaByID($ID);                        
             $html .= $this->printTitoloPagina('Dettaglio Etichetta');
             $fields = $this->getEtichettaFormFields($etichetta);
             $form = parent::detailForm(FRM_ETI, $fields, true);
@@ -632,40 +744,44 @@ class EtichettaView extends ssf\PrinterView implements ssf\InterfaceView{
     }
     
     public function listenerEtichettaForm(): string|null{ 
-            //Salvataggio
-            if(isset($_POST[FRM_ETI.FRM_SAVE])){  
-                $etichetta = $this->etichettaCheckFields();  
-                
-                if($etichetta != null){
-                    $template = $etichetta->getTemplate();
-                    $save = $this->controller->saveEtichetta($etichetta, $etichetta->getIdModelloTemplate());
-                    if($save > 0){
-                        unset($_POST);
-                    }
-                    return $this->printMessageAfterSave('Etichetta', $save);
+        //Salvataggio
+        if(isset($_POST[FRM_ETI.FRM_SAVE])){  
+            $etichetta = $this->etichettaCheckFields();  
+
+            if($etichetta != null){
+                $template = $etichetta->getTemplate();
+                $save = $this->controller->saveEtichetta($etichetta, $etichetta->getIdModelloTemplate());
+                if($save > 0){
+                    unset($_POST);
                 }
+                return $this->printMessageAfterSave('Etichetta', $save);
             }
-            //Aggiornamento
-            else if(isset($_POST[FRM_ETI.FRM_UPDATE])){
-                $etichetta = $this->etichettaCheckFields(); 
-                
-                if($etichetta != null){
-                    $update = $this->controller->updateEtichetta($etichetta);
-                    return $this->printMessageAfterUpdate($update);
-                }
+        }
+        //Aggiornamento
+        else if(isset($_POST[FRM_ETI.FRM_UPDATE])){
+            
+            $etichetta = $this->etichettaCheckFields(); 
+            print_r($etichetta);
+            
+            die();
+            if($etichetta != null){
+                $update = $this->controller->updateEtichetta($etichetta);
+                return $this->printMessageAfterUpdate($update);
             }
-            //Cancellazione
-            else if(isset($_POST[FRM_ETI.FRM_DELETE])){
-                $etichetta = $this->etichettaCheckFields();
-                if($etichetta != null){
-                    $template = $etichetta->getTemplate();
-                    if($template != null){
-                        $this->controller->deleteTemplate($template->getID());
-                    }                    
-                    $delete = $this->controller->deleteEtichetta($etichetta->getID());
-                    return $this->printMessageAfterDelete($delete);
-                }
+       
+        }
+        //Cancellazione
+        else if(isset($_POST[FRM_ETI.FRM_DELETE])){
+            $etichetta = $this->etichettaCheckFields();
+            if($etichetta != null){
+                $template = $etichetta->getTemplate();
+                if($template != null){
+                    $this->controller->deleteTemplate($template->getID());
+                }                    
+                $delete = $this->controller->deleteEtichetta($etichetta->getID());
+                return $this->printMessageAfterDelete($delete);
             }
+        }
         
         return null;
     }
@@ -812,6 +928,50 @@ class EtichettaView extends ssf\PrinterView implements ssf\InterfaceView{
         
         
         return $html;
+    }
+    
+    /**
+     * La funzione verifica se ci sono i campi attivi per le traduzioni delle voci template salvate nelle etichette
+     * @param Etichetta $etichetta
+     * @return void
+     */
+    private function checkVociTradotte(Etichetta $etichetta): void{
+        //devo verificare che l'etichetta abbia le traduzioni attive         
+        $lingue = $this->tradC->getLingueAttive(); 
+        if(ssf\checkResult($lingue)){
+            //in questo caso ci sono le lingue attive e proseguo nel verificare se ci sono voci tradotte            
+            //ottengo il template per verificare le voci
+            $template = $etichetta->getTemplate();
+            $voci = $template->getVoci();
+            //devo ciclare all'interno delle voci del template e verificare se c'è la corrispondenza con le voci tradotte
+            foreach($lingue as $lingua){
+                foreach($voci as $item){
+                    $voce = updateToVoce($item);
+                    if(!$this->tradC->checkVoceTradotta($voce->getID(), $lingua)){
+                       //non ho trovato la voce la creo!
+                       $vt = $this->copyVoceinVoceTradotta($voce, $lingua);
+                       $this->tradC->saveVoceTradotta($vt);
+                    }                    
+                }
+            }
+        }        
+    }
+    
+    /**
+     * La funzione copia i campi di voce in un ogetto VoceTradotta
+     * @param Voce $voce
+     * @return VoceTradotta
+     */
+    private function copyVoceinVoceTradotta(Voce $voce, string $lingua):VoceTradotta{
+        $vt = new VoceTradotta();
+        $vt->setIdVoce($voce->getID());
+        $vt->setLang($lingua);
+        $vt->setIdTemplate($voce->getIdTemplate());
+        $vt->setLabel($voce->getLabel());
+        $vt->setValore($voce->getValore());
+        $vt->setTipo($voce->getTipo());
+        $vt->setVisualizza($voce->getVisualizza());
+        return $vt;
     }
     
     

@@ -67,7 +67,7 @@ class VoceDAO extends ssf\ObjectDAO implements ssf\InterfaceDAO {
     }
 
     public function save(ssf\MyObject $o): bool|int {
-        $obj = $this->updateToObj($o); 
+        $obj = $this->updateToObj($o);        
         return parent::saveObject($this->getArray($obj), $this->getFomato());
     }
 

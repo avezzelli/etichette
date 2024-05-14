@@ -5,12 +5,25 @@ use seositiframework as ssf;
 
 class TraduzioneController implements ssf\InterfaceController{
 
-    private TraduzioneDAO $traDAO;
+    private TraduzioneDAO $traDAO;   
+    private VoceTradottaDAO $vtrDAO;
+    
+    private array $lingue = array(
+            'en' => 'English',
+            'fr' => 'Français',
+            'de' => 'Deutsch',
+            'es' => 'Español'
+        );
     
     function __construct() {
-        $this->traDAO = new TraduzioneDAO();
+        $this->traDAO = new TraduzioneDAO();     
+        $this->vtrDAO = new VoceTradottaDAO();
     }
-
+    
+    public function getLingue():array{
+        return $this->lingue;
+    }
+   
     public function delete(int $ID): bool {
         return $this->traDAO->deleteByID($ID);
     }
@@ -34,6 +47,22 @@ class TraduzioneController implements ssf\InterfaceController{
     
     public function getTraduzioni(): array|null{
         return $this->traDAO->getResults();
+    }
+    
+    /**
+     * La funzione restituisce un array di lingue attive per la traduzione;
+     * @return array
+     */
+    public function getLingueAttive(): array{
+        $result = array();
+        $temp = $this->traDAO->getResults();
+        if(ssf\checkResult($temp)){
+            foreach($temp as $item){
+                $t = updateToTraduzione($item);
+                array_push($result, $t->getLingua());
+            }
+        }        
+        return $result;
     }
     
     public function salvaTraduzioni(array $lingue): bool{
@@ -61,4 +90,52 @@ class TraduzioneController implements ssf\InterfaceController{
         
         return true;
     }
+    
+    
+    /**** VOCI TRADOTTE *****/
+    
+    /**
+     * La funzione controlla se esiste una voce tradotta in riferimento ad una voce del template 
+     * in riferimento ad una lingua passata. 
+     * @param int $idVoce
+     * @param string $lang
+     * @return bool
+     */
+    public function checkVoceTradotta(int $idVoce, string $lang): bool{
+        $where = array(
+            ssf\getQueryField(DBT_ID_VOC, $idVoce, ssf\Formato::NUMERO()),
+            ssf\getQueryField(DBT_VTR_LANG, $lang, ssf\Formato::TESTO())
+        );
+        $temp = $this->vtrDAO->getResults($where);
+        if(ssf\checkResult($temp)){
+            return true;
+        }
+        return false;
+    }
+    
+    public function getVociTradotte(int $idTemplate): array {
+        $result = array();
+        $where = array(
+            ssf\getQueryField(DBT_ID_TEM, $idTemplate, ssf\Formato::NUMERO())
+        );
+        $temp = $this->vtrDAO->getResults($where);
+        if(ssf\checkResult($temp)){
+            foreach($temp as $item){               
+                array_push($result, updateToVoceTradotta($item));
+            }
+        }        
+        return $result;
+    }
+    
+    public function getVoceTradotta(int $idVT): null|VoceTradotta{
+        return $this->vtrDAO->getResultByID($idVT);
+    }
+    
+    public function saveVoceTradotta(VoceTradotta $vt): bool{
+        if($this->vtrDAO->save($vt) > 0){
+            return true;
+        }
+        return false;
+    }
+    
 }

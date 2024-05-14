@@ -11,12 +11,7 @@ class TraduzioneView extends ssf\PrinterView implements ssf\InterfaceView {
     function __construct() {
         parent::__construct();
         $this->controller = new TraduzioneController();
-        $this->lingue = array(
-            'en' => 'English',
-            'fr' => 'Français',
-            'de' => 'Deutsch',
-            'es' => 'Español'
-        );
+        $this->lingue = $this->controller->getLingue();
     }
 
     /*** LISTENER ***/

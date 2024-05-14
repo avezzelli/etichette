@@ -787,6 +787,59 @@ class PrinterView {
         }
         return '<img src="'.$url.'" '.$class.' />';
     }
+    
+    /**
+     * La funzione stampa una sezione a TAB passando l'id della sezione e il contenuto suddiviso in ID, Prefisso, Titolo e Contenuto
+     * @param string $idTab
+     * @param array $dati
+     * @return string
+     */
+    protected function printTabSection(string $idTab, array $dati):string{
+        $html = '';
+        
+        //$dati è un array che contiene un ulteriore array $data:        
+        //1. Prefisso del contenuto $data['prefisso']
+        //2. Titolo del menu (uguale per tutti in italiano) $data['titolo]
+        //3. Contenuto $data['contenuto']
+        
+        //Stampo i tabs
+        $html .= '<ul class="nav nav-tabs" id="'.$idTab.'" role="tablist">';
+        $count = 0;
+        foreach ($dati as $data){
+            $active = '';
+            $selected = 'false';
+            if($count == 0){
+                $active = 'active';
+                $selected = 'true';
+            }
+            $html .= '<li class="nav-item" role="presentation">';
+            $html .=    '<button class="nav-link '.$active.'" id="'.$data['prefisso'].'-tab" data-bs-toggle="tab" data-bs-target="#'.$data['prefisso'].'-tab-pane" type="button" role="tab" aria-controls="'.$data['prefisso'].'-tab-pane" aria-selected="'.$selected.'">';
+            $html .=        $data['titolo'];
+            $html .=    '</button>';
+            $html .= '</li>';
+            $count++;
+        }
+        $html .= '</ul>';
+        
+        //Stampo i content
+        $html .= '<div class="tab-content" id="'.$idTab.'Content">';
+        
+        $count = 0;
+        foreach ($dati as $data){
+            $active = '';
+            if($count == 0){
+                $active = 'show active';
+            }
+            $html .= '<div class="tab-pane fade '.$active.'" id="'.$data['prefisso'].'-tab-pane" role="tabpanel" aria-labelledby="'.$data['prefisso'].'-tab" tabindex="0">';
+            $html .= $data['contenuto'];
+            $html .= '</div>';            
+            $count++;
+        }
+        $html .= '</div>';
+        
+        return $html;
+    }
+    
 
 
     /***********************************************************/

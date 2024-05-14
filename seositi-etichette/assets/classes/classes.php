@@ -9,6 +9,7 @@ require_once 'model/Categoria.php';
 require_once 'model/Cliente.php';
 require_once 'model/Etichetta.php';
 require_once 'model/Traduzione.php';
+require_once 'model/VoceTradotta.php';
 
 
 /********************* CLASSI DAO *********************/
@@ -18,6 +19,7 @@ require_once 'dao/TemplateDAO.php';
 require_once 'dao/ClienteDAO.php';
 require_once 'dao/EtichettaDAO.php';
 require_once 'dao/TraduzioneDAO.php';
+require_once 'dao/VoceTradottaDAO.php';
 
 
 /********************* CLASSI CONTROLLER *********************/

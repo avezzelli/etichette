@@ -7,12 +7,14 @@ class Template extends ssf\MyObject{
     private int $tipo;
     private array $voci;
     private int $idEtichetta;
+    private array $vociTradotte;
     
     function __construct() {
         parent::__construct();
         $this->nome = '';
         $this->tipo = 0;
         $this->idEtichetta = 0;
+        $this->vociTradotte = array();
     }
     
     public function getNome(): string {
@@ -46,8 +48,13 @@ class Template extends ssf\MyObject{
     public function setIdEtichetta(int $idEtichetta): void {
         $this->idEtichetta = $idEtichetta;
     }
+    
+    public function getVociTradotte(): array {
+        return $this->vociTradotte;
+    }
 
-
-
+    public function setVociTradotte(array $vociTradotte): void {
+        $this->vociTradotte = $vociTradotte;
+    }
 
 }

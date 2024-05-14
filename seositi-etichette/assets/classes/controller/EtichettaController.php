@@ -9,12 +9,14 @@ class EtichettaController implements ssf\InterfaceController {
     private VoceDAO $vocDAO;
     private EtichettaDAO $etiDAO;
     private CategoriaDAO $catDAO;
+    private TraduzioneController $traController;
 
     function __construct() {
         $this->temDAO = new TemplateDAO();
         $this->vocDAO = new VoceDAO();
         $this->etiDAO = new EtichettaDAO();
         $this->catDAO = new CategoriaDAO();
+        $this->traController = new TraduzioneController();
     }
 
     public function delete(int $ID): bool {
@@ -95,7 +97,10 @@ class EtichettaController implements ssf\InterfaceController {
     }
     
     public function deleteVociByTemplate(int $idTem): bool{
-        return $this->vocDAO->delete(array(DBT_ID_TEM => $idTem));
+        //nel caso ci siano delle voci tradotte elimino anche loro        
+        $where = array(DBT_ID_TEM => $idTem);
+        $this->vtrDAO->delete($where);        
+        return $this->vocDAO->delete($where);
     }
     
     public function saveVoce(Voce $obj, int $idTem): bool|int{
@@ -125,7 +130,36 @@ class EtichettaController implements ssf\InterfaceController {
         return $result;
     }
     
+    /*** VOCE TRADOTTA **/
+    public function deleteVoceTradotta(int $ID): bool{
+        return $this->vtrDAO->deleteByID($ID);
+    }
     
+    public function saveVoceTradotta(Voce $obj, int $idTem, string $lang): bool|int{       
+        $obj->setIdTemplate(0);
+       
+        $idVoce = $this->vocDAO->save($obj);
+        //$idVoce = $this->saveVoce($obj, 0); //imposto a zero per riuscire a diversificarlo dalla tabella db di voce        
+       
+        if($idVoce > 0){
+            $vtr = new VoceTradotta();
+            $vtr->setLang($lang);
+            $vtr->setIdVoce($idVoce);
+            $vtr->setIdTem($idTem);
+            return $this->vtrDAO->save($vtr);
+        }
+        return false;                
+    }
+    
+    public function updateVoceTradotta(Voce $obj): bool|int{
+        return $this->updateVoce($obj);
+    }
+    
+    public function getVoceTradottaByID(int $idVoceTradotta): null|Voce{
+        return $this->vtrDAO->getResultByID($idVoceTradotta);
+    }
+    
+        
     /*** TEMPLATE ***/
     
     public function deleteTemplate(int $ID): bool{
@@ -164,9 +198,11 @@ class EtichettaController implements ssf\InterfaceController {
             //1. Aggiorno il template
             $update = $this->temDAO->update($obj);
             //2. salvo le voci (elimino quelle attuali e salvo le nuove)
-            $this->vocDAO->delete(array(DBT_ID_TEM => $obj->getID()));
-            if(!$this->saveVoci($obj->getVoci(), $obj->getID())){
-                return -2;
+            //Per via delle traduzioni non posso più permettermi di eliminare e salvare. 
+            //Devo aggiornare voce per voce.
+            foreach($obj->getVoci() as $item){
+                $voce = updateToVoce($item);
+                $this->updateVoce($voce);
             }
             return $update;
         }
@@ -181,6 +217,7 @@ class EtichettaController implements ssf\InterfaceController {
         if(ssf\checkResult($temp)){
             $result = updateToTemplate($temp[0]);
             $result->setVoci($this->getVociByTemplate($result->getID()));
+            $result->setVociTradotte($this->traController->getVociTradotte($result->getID()));
         }              
         return $result;
     }
@@ -190,6 +227,7 @@ class EtichettaController implements ssf\InterfaceController {
         $result = $this->temDAO->getResultByID($idTem);
         if($result != null){
             $result->setVoci($this->getVociByTemplate($result->getID()));
+            $result->setVociTradotte($this->traController->getVociTradotte($result->getID()));
         }
         return $result;
     }

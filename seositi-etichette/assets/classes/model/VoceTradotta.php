@@ -3,23 +3,40 @@
 namespace etichette;
 use seositiframework as ssf;
 
-class Voce extends ssf\MyObject {
+class VoceTradotta extends ssf\MyObject {
     
+    private int $idVoce;
+    private string $lang;
+    private int $idTemplate;
     private string $label;
     private string $valore;
     private string $tipo;
-    private int $idTemplate;
     private int $visualizza;
-
+    
+        
     function __construct() {
-        parent::__construct();
+        parent::__construct();        
+        $this->idVoce = 0;
+        $this->lang = ''; 
+        $this->idTemplate = 0;
         $this->label = '';
         $this->valore = '';
         $this->tipo = '';
-        $this->idTemplate = 0;
-        $this->visualizza = 0;
+        $this->visualizza = 0;        
     }
     
+    public function getIdVoce(): int {
+        return $this->idVoce;
+    }
+
+    public function getLang(): string {
+        return $this->lang;
+    }
+
+    public function getIdTemplate(): int {
+        return $this->idTemplate;
+    }
+
     public function getLabel(): string {
         return $this->label;
     }
@@ -32,8 +49,20 @@ class Voce extends ssf\MyObject {
         return $this->tipo;
     }
 
-    public function getIdTemplate(): int {
-        return $this->idTemplate;
+    public function getVisualizza(): int {
+        return $this->visualizza;
+    }
+
+    public function setIdVoce(int $idVoce): void {
+        $this->idVoce = $idVoce;
+    }
+
+    public function setLang(string $lang): void {
+        $this->lang = $lang;
+    }
+
+    public function setIdTemplate(int $idTemplate): void {
+        $this->idTemplate = $idTemplate;
     }
 
     public function setLabel(string $label): void {
@@ -46,14 +75,6 @@ class Voce extends ssf\MyObject {
 
     public function setTipo(string $tipo): void {
         $this->tipo = $tipo;
-    }
-
-    public function setIdTemplate(int $idTemplate): void {
-        $this->idTemplate = $idTemplate;
-    }
-
-    public function getVisualizza(): int {
-        return $this->visualizza;
     }
 
     public function setVisualizza(int $visualizza): void {

@@ -40,6 +40,7 @@ abstract class ObjectDAO {
                     $formato
             );
 
+            /** TOGLIERE IL COMMENTO IN CASO DI DEBUG **/
             //$this->wpdb->show_errors();
             //$this->wpdb->print_error();
 
